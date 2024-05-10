@@ -221,16 +221,62 @@ public:
 		//	This is a very complex topic and while it's fine for an example application to small individual memory allocations that is not
 		//	what should be done a real-world application, where you should allocate large chunks of memory at once instead.
 
-		// Setup vertices
+
+		// ----------------- TODO -----------------
+		// 2a: Erstellen von mehreren Vertices
+
+		// Triangle
+		//std::vector<Vertex> vertexBuffer{
+		//	{ {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		//	{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		//	{ {  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+		//};
+
+		// Quad
 		std::vector<Vertex> vertexBuffer{
-			{ {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-			{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-			{ {  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+			{ { -1.0f, -1.0, 0.0 }, { 1.0f, 0.0f, 0.0f } }, // Left Top Back
+			{ { -1.0f,  1.0, 0.0 }, { 0.0f, 1.0f, 0.0f } }, // Left Top Front
+			{ {  1.0f, -1.0, 0.0 }, { 0.0f, 0.0f, 1.0f } }, // Right Top Back
+			{ {  1.0f,  1.0, 0.0 }, { 1.0f, 1.0f, 0.0f } }, // Right Top Front
 		};
+
+		// Cube
+		//std::vector<Vertex> vertexBuffer{
+		//	{ { -1.0f, -1.0, -1.0 }, { 1.0f, 0.0f, 0.0f } }, // Left Top Back
+		//	{ { -1.0f, -1.0,  1.0 }, { 0.0f, 1.0f, 0.0f } }, // Left Top Front
+		//	{ {  1.0f, -1.0, -1.0 }, { 0.0f, 0.0f, 1.0f } }, // Right Top Back
+		//	{ {  1.0f, -1.0,  1.0 }, { 1.0f, 1.0f, 0.0f } }, // Right Top Front
+		//	{ { -1.0f,  1.0, -1.0 }, { 1.0f, 1.0f, 0.0f } }, // Left Bottom Back
+		//	{ { -1.0f,  1.0,  1.0 }, { 0.0f, 0.0f, 1.0f } }, // Left Bottom Front
+		//	{ {  1.0f,  1.0, -1.0 }, { 0.0f, 1.0f, 0.0f } }, // Right Bottom Back
+		//	{ {  1.0f,  1.0,  1.0 }, { 1.0f, 0.0f, 0.0f } }, // Right Bottom Front
+		//};
+
 		uint32_t vertexBufferSize = static_cast<uint32_t>(vertexBuffer.size()) * sizeof(Vertex);
 
-		// Setup indices
-		std::vector<uint32_t> indexBuffer{ 0, 1, 2 };
+		// ----------------- TODO -----------------
+		// 2a: Erstellen der Indizes für die Vertices
+
+		// Triangle
+		//std::vector<uint32_t> indexBuffer{
+		//	0, 1, 2
+		//};
+
+		// Quad
+		std::vector<uint32_t> indexBuffer{
+			0, 1, 2, 2, 1, 3
+		};
+
+		// Cube
+		//std::vector<uint32_t> indexBuffer{
+		//	0, 1, 2, 2, 1, 3, // Top
+		//	4, 6, 5, 5, 6, 7, // Bottom
+		//	0, 2, 4, 4, 2, 6, // Back
+		//	1, 5, 3, 3, 5, 7, // Front
+		//	0, 4, 1, 1, 4, 5, // Left
+		//	2, 3, 6, 6, 3, 7  // Right
+		//};
+
 		indices.count = static_cast<uint32_t>(indexBuffer.size());
 		uint32_t indexBufferSize = indices.count * sizeof(uint32_t);
 
