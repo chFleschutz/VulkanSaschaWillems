@@ -593,8 +593,8 @@ public:
 		std::array<VkPipelineShaderStageCreateInfo,2> shaderStages;
 
 		// Shaders
-		shaderStages[0] = loadShader(getShadersPath() + "texture/texture.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-		shaderStages[1] = loadShader(getShadersPath() + "texture/texture.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
+		shaderStages[0] = loadShader(SRCDIR "shaders/texture.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
+		shaderStages[1] = loadShader(SRCDIR "shaders/texture.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		// Vertex input state
 		std::vector<VkVertexInputBindingDescription> vertexInputBindings = {
