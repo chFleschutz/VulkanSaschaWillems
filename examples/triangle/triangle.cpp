@@ -78,10 +78,15 @@ public:
 	//
 	// This way we can just memcopy the ubo data to the ubo
 	// Note: You should use data types that align with the GPU in order to avoid manual padding (vec4, mat4)
-	struct ShaderData {
+
+	// ----------------- TODO -----------------
+	// 3a: Füge eine Zeitvariable zum UniformBufferObject hinzu
+
+	struct UniformBufferObject {
 		glm::mat4 projectionMatrix;
 		glm::mat4 modelMatrix;
 		glm::mat4 viewMatrix;
+		float time = 0.0f;
 	};
 
 	// The pipeline layout is used by a pipeline to access the descriptor sets
@@ -492,7 +497,7 @@ public:
 			// The buffer's information is passed using a descriptor info structure
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = uniformBuffers[i].buffer;
-			bufferInfo.range = sizeof(ShaderData);
+			bufferInfo.range = sizeof(UniformBufferObject);
 
 			// Binding 0 : Uniform buffer
 			writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -750,16 +755,19 @@ public:
 		inputAssemblyStateCI.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 		inputAssemblyStateCI.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
+		// ----------------- TODO -----------------
+		// 3b: Aktivieren Sie die Wireframe-Darstellung
+		 
 		// Rasterization state
 		VkPipelineRasterizationStateCreateInfo rasterizationStateCI{};
 		rasterizationStateCI.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		rasterizationStateCI.polygonMode = VK_POLYGON_MODE_FILL;
+		rasterizationStateCI.polygonMode = VK_POLYGON_MODE_LINE;
 		rasterizationStateCI.cullMode = VK_CULL_MODE_NONE;
 		rasterizationStateCI.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterizationStateCI.depthClampEnable = VK_FALSE;
 		rasterizationStateCI.rasterizerDiscardEnable = VK_FALSE;
 		rasterizationStateCI.depthBiasEnable = VK_FALSE;
-		rasterizationStateCI.lineWidth = 1.0f;
+		rasterizationStateCI.lineWidth = 5.0f; // <- Interessant wenn Wireframe aktiviert
 
 		// Color blend state describes how blend factors are calculated (if used)
 		// We need one blend attachment state per color attachment (even if blending is not used)
@@ -907,7 +915,7 @@ public:
 		allocInfo.memoryTypeIndex = 0;
 
 		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferInfo.size = sizeof(ShaderData);
+		bufferInfo.size = sizeof(UniformBufferObject);
 		// This buffer will be used as a uniform buffer
 		bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
@@ -927,7 +935,7 @@ public:
 			// Bind memory to buffer
 			VK_CHECK_RESULT(vkBindBufferMemory(device, uniformBuffers[i].buffer, uniformBuffers[i].memory, 0));
 			// We map the buffer once, so we can update it without having to map it again
-			VK_CHECK_RESULT(vkMapMemory(device, uniformBuffers[i].memory, 0, sizeof(ShaderData), 0, (void**)&uniformBuffers[i].mapped));
+			VK_CHECK_RESULT(vkMapMemory(device, uniformBuffers[i].memory, 0, sizeof(UniformBufferObject), 0, (void**)&uniformBuffers[i].mapped));
 		}
 
 	}
@@ -944,6 +952,30 @@ public:
 		createDescriptorSets();
 		createPipelines();
 		prepared = true;
+	}
+
+	void updateUniformBuffers()
+	{
+		// Calculates value which oscillates between 0 and 1 over time
+		static auto startTime = std::chrono::high_resolution_clock::now();
+		auto currentTime = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::duration<float>>(currentTime - startTime).count();
+
+		float frequency = 0.25f;	// 0.25 Hz (one full rotation every 4 seconds)
+		float value = (std::sin(2 * M_PI * frequency * duration) + 1) / 2;
+
+		// ----------------- TODO -----------------
+		// 3a: Updaten Sie die Zeitvariable des UniformBufferObject
+
+		UniformBufferObject ubo{};
+		ubo.projectionMatrix = camera.matrices.perspective;
+		ubo.viewMatrix = camera.matrices.view;
+		ubo.modelMatrix = glm::mat4(1.0f);
+		ubo.time = value;
+
+		// Copy the current matrices to the current frame's uniform buffer
+		// Note: Since we requested a host coherent memory type for the uniform buffer, the write is instantly visible to the GPU
+		memcpy(uniformBuffers[currentFrame].mapped, &ubo, sizeof(UniformBufferObject));
 	}
 
 	virtual void render()
@@ -967,15 +999,7 @@ public:
 			throw "Could not acquire the next swap chain image!";
 		}
 
-		// Update the uniform buffer for the next frame
-		ShaderData shaderData{};
-		shaderData.projectionMatrix = camera.matrices.perspective;
-		shaderData.viewMatrix = camera.matrices.view;
-		shaderData.modelMatrix = glm::mat4(1.0f);
-
-		// Copy the current matrices to the current frame's uniform buffer
-		// Note: Since we requested a host coherent memory type for the uniform buffer, the write is instantly visible to the GPU
-		memcpy(uniformBuffers[currentFrame].mapped, &shaderData, sizeof(ShaderData));
+		updateUniformBuffers();
 
 		// Build the command buffer
 		// Unlike in OpenGL all rendering commands are recorded into command buffers that are then submitted to the queue
