@@ -84,7 +84,6 @@ endfunction(buildExamples)
 
 set(EXAMPLES
 	triangle
-	texture
 )
 
 buildExamples()
