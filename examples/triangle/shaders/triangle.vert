@@ -15,6 +15,7 @@ layout (binding = 0) uniform UBO
 } ubo;
 
 layout (location = 0) out vec3 outColor;
+layout (location = 1) out vec2 outUV;
 
 out gl_PerVertex 
 {
@@ -29,4 +30,19 @@ void main()
 	
 	outColor = (inColor * ubo.time) + (vec3(0.1) * inColor);
 	gl_Position = ubo.projectionMatrix * ubo.viewMatrix * ubo.modelMatrix * vec4(inPos.xyz, 1.0);
+
+	// ----------------- TODO -----------------
+	// 4c: UV-Koordinaten an den Fragment-Shader weitergeben
+
+	vec2 textureCoords[8] = vec2[](
+		vec2(0.0, 0.0),
+		vec2(0.0, 1.0),
+		vec2(1.0, 0.0),
+		vec2(1.0, 1.0),
+		vec2(1.0, 1.0),
+		vec2(0.0, 0.0),
+		vec2(0.0, 0.0),
+		vec2(1.0, 0.0)
+	);
+	outUV = textureCoords[gl_VertexIndex];
 }

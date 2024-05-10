@@ -27,6 +27,8 @@
 #include <vulkan/vulkan.h>
 #include "vulkanexamplebase.h"
 
+#include "VulkanTexture.h"
+
 // We want to keep GPU and CPU busy. To do that we may start building a new command buffer while the previous one is still being executed
 // This number defines how many frames may be worked on simultaneously at once
 // Increasing this number may improve performance but will also introduce additional latency
@@ -88,6 +90,9 @@ public:
 		glm::mat4 viewMatrix;
 		float time = 0.0f;
 	};
+
+	// Texture
+	vks::Texture2D texture;
 
 	// The pipeline layout is used by a pipeline to access the descriptor sets
 	// It defines interface (without binding any actual data) between the shader stages used by the pipeline and the shader resources
@@ -452,18 +457,34 @@ public:
 	// So every shader binding should map to one descriptor set layout binding
 	void createDescriptorSetLayout()
 	{
+		std::vector<VkDescriptorSetLayoutBinding> layoutBindings{};
+
 		// Binding 0: Uniform buffer (Vertex shader)
-		VkDescriptorSetLayoutBinding layoutBinding{};
-		layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		layoutBinding.descriptorCount = 1;
-		layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		layoutBinding.pImmutableSamplers = nullptr;
+		VkDescriptorSetLayoutBinding uboBinding{};
+		uboBinding.binding = 0;
+		uboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		uboBinding.descriptorCount = 1;
+		uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		uboBinding.pImmutableSamplers = nullptr;
+		layoutBindings.push_back(uboBinding);
+
+		// ----------------- TODO -----------------
+		// 4a: Erstellen Sie ein VkDescriptorSetLayoutBinding für die Textur
+
+		// Binding 1: Combined image sampler (Fragment shader)
+		VkDescriptorSetLayoutBinding samplerBinding{};
+		samplerBinding.binding = 1;
+		samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		samplerBinding.descriptorCount = 1;
+		samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		samplerBinding.pImmutableSamplers = nullptr;
+		layoutBindings.push_back(samplerBinding);
 
 		VkDescriptorSetLayoutCreateInfo descriptorLayoutCI{};
 		descriptorLayoutCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		descriptorLayoutCI.pNext = nullptr;
-		descriptorLayoutCI.bindingCount = 1;
-		descriptorLayoutCI.pBindings = &layoutBinding;
+		descriptorLayoutCI.bindingCount = static_cast<uint32_t>(layoutBindings.size());
+		descriptorLayoutCI.pBindings = layoutBindings.data();
 		VK_CHECK_RESULT(vkCreateDescriptorSetLayout(device, &descriptorLayoutCI, nullptr, &descriptorSetLayout));
 
 		// Create the pipeline layout that is used to generate the rendering pipelines that are based on this descriptor set layout
@@ -480,8 +501,15 @@ public:
 	// The descriptor sets make use of the descriptor set layouts created above 
 	void createDescriptorSets()
 	{
+		// Load a texture
+		// Only .KTX is supported (see https://www.khronos.org/ktx/)
+		std::string filename = getAssetPath() + "textures/metalplate01_rgba.ktx";
+		texture.loadFromFile(filename, VK_FORMAT_R8G8B8A8_UNORM, vulkanDevice, queue);
+		auto texDescriptorInfo = texture.descriptor;
+
 		// Allocate one descriptor set per frame from the global descriptor pool
-		for (uint32_t i = 0; i < MAX_CONCURRENT_FRAMES; i++) {
+		for (uint32_t i = 0; i < MAX_CONCURRENT_FRAMES; i++) 
+		{
 			VkDescriptorSetAllocateInfo allocInfo{};
 			allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 			allocInfo.descriptorPool = descriptorPool;
@@ -489,24 +517,44 @@ public:
 			allocInfo.pSetLayouts = &descriptorSetLayout;
 			VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &uniformBuffers[i].descriptorSet));
 
-			// Update the descriptor set determining the shader binding points
-			// For every binding point used in a shader there needs to be one
-			// descriptor set matching that binding point
-			VkWriteDescriptorSet writeDescriptorSet{};
-			
 			// The buffer's information is passed using a descriptor info structure
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = uniformBuffers[i].buffer;
 			bufferInfo.range = sizeof(UniformBufferObject);
 
+			// Update the descriptor set determining the shader binding points
+			// For every binding point used in a shader there needs to be one
+			// descriptor set matching that binding point
+			std::vector<VkWriteDescriptorSet> writeDescriptorSets{};
+
 			// Binding 0 : Uniform buffer
-			writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			writeDescriptorSet.dstSet = uniformBuffers[i].descriptorSet;
-			writeDescriptorSet.descriptorCount = 1;
-			writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			writeDescriptorSet.pBufferInfo = &bufferInfo;
-			writeDescriptorSet.dstBinding = 0;
-			vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
+			VkWriteDescriptorSet uboDescriptorWrite{};
+			uboDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			uboDescriptorWrite.dstSet = uniformBuffers[i].descriptorSet;
+			uboDescriptorWrite.descriptorCount = 1;
+			uboDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			uboDescriptorWrite.pBufferInfo = &bufferInfo;
+			uboDescriptorWrite.dstBinding = 0;
+			writeDescriptorSets.push_back(uboDescriptorWrite);
+
+			// ----------------- TODO -----------------
+			// 4b: Erstellen Sie ein VkWriteDescriptorSet für die Textur
+
+			// Binding 1 : Combined image sampler
+			VkWriteDescriptorSet samplerDescriptorWrite{};
+			samplerDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			samplerDescriptorWrite.dstSet = uniformBuffers[i].descriptorSet;
+			samplerDescriptorWrite.descriptorCount = 1;
+			samplerDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			samplerDescriptorWrite.pImageInfo = &texDescriptorInfo;
+			samplerDescriptorWrite.dstBinding = 1;
+			writeDescriptorSets.push_back(samplerDescriptorWrite);
+
+			vkUpdateDescriptorSets(device, 
+				static_cast<uint32_t>(writeDescriptorSets.size()), 
+				writeDescriptorSets.data(), 
+				0, nullptr
+			);
 		}
 	}
 
@@ -761,13 +809,13 @@ public:
 		// Rasterization state
 		VkPipelineRasterizationStateCreateInfo rasterizationStateCI{};
 		rasterizationStateCI.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		rasterizationStateCI.polygonMode = VK_POLYGON_MODE_LINE;
+		rasterizationStateCI.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterizationStateCI.cullMode = VK_CULL_MODE_NONE;
 		rasterizationStateCI.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterizationStateCI.depthClampEnable = VK_FALSE;
 		rasterizationStateCI.rasterizerDiscardEnable = VK_FALSE;
 		rasterizationStateCI.depthBiasEnable = VK_FALSE;
-		rasterizationStateCI.lineWidth = 5.0f; // <- Interessant wenn Wireframe aktiviert
+		rasterizationStateCI.lineWidth = 1.0f; // <- Interessant wenn Wireframe aktiviert
 
 		// Color blend state describes how blend factors are calculated (if used)
 		// We need one blend attachment state per color attachment (even if blending is not used)
