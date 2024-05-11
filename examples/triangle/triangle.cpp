@@ -34,6 +34,9 @@
 // Increasing this number may improve performance but will also introduce additional latency
 #define MAX_CONCURRENT_FRAMES 2
 
+// Enable Validation layers
+#define ENABLE_VALIDATION false
+
 class VulkanExample : public VulkanExampleBase
 {
 public:
@@ -88,7 +91,6 @@ public:
 		glm::mat4 projectionMatrix;
 		glm::mat4 modelMatrix;
 		glm::mat4 viewMatrix;
-		float time = 0.0f;
 	};
 
 	// Texture
@@ -134,6 +136,12 @@ public:
 		camera.setRotation(glm::vec3(0.0f));
 		camera.setPerspective(60.0f, (float)width / (float)height, 1.0f, 256.0f);
 		// Values not set here are initialized in the base class constructor
+
+		if (ENABLE_VALIDATION)
+		{
+			settings.validation = true;
+			setupConsole("Vulkan example");
+		}
 	}
 
 	~VulkanExample()
@@ -231,61 +239,23 @@ public:
 		//	This is a very complex topic and while it's fine for an example application to small individual memory allocations that is not
 		//	what should be done a real-world application, where you should allocate large chunks of memory at once instead.
 
-
 		// ----------------- TODO -----------------
 		// 2a: Erstellen von mehreren Vertices
 
-		// Triangle
-		//std::vector<Vertex> vertexBuffer{
-		//	{ {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-		//	{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-		//	{ {  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
-		//};
-
-		// Quad
 		std::vector<Vertex> vertexBuffer{
-			{ { -1.0f, -1.0, 0.0 }, { 1.0f, 0.0f, 0.0f } }, // Left Top Back
-			{ { -1.0f,  1.0, 0.0 }, { 0.0f, 1.0f, 0.0f } }, // Left Top Front
-			{ {  1.0f, -1.0, 0.0 }, { 0.0f, 0.0f, 1.0f } }, // Right Top Back
-			{ {  1.0f,  1.0, 0.0 }, { 1.0f, 1.0f, 0.0f } }, // Right Top Front
+			{ {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+			{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+			{ {  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
 		};
-
-		// Cube
-		//std::vector<Vertex> vertexBuffer{
-		//	{ { -1.0f, -1.0, -1.0 }, { 1.0f, 0.0f, 0.0f } }, // Left Top Back
-		//	{ { -1.0f, -1.0,  1.0 }, { 0.0f, 1.0f, 0.0f } }, // Left Top Front
-		//	{ {  1.0f, -1.0, -1.0 }, { 0.0f, 0.0f, 1.0f } }, // Right Top Back
-		//	{ {  1.0f, -1.0,  1.0 }, { 1.0f, 1.0f, 0.0f } }, // Right Top Front
-		//	{ { -1.0f,  1.0, -1.0 }, { 1.0f, 1.0f, 0.0f } }, // Left Bottom Back
-		//	{ { -1.0f,  1.0,  1.0 }, { 0.0f, 0.0f, 1.0f } }, // Left Bottom Front
-		//	{ {  1.0f,  1.0, -1.0 }, { 0.0f, 1.0f, 0.0f } }, // Right Bottom Back
-		//	{ {  1.0f,  1.0,  1.0 }, { 1.0f, 0.0f, 0.0f } }, // Right Bottom Front
-		//};
 
 		uint32_t vertexBufferSize = static_cast<uint32_t>(vertexBuffer.size()) * sizeof(Vertex);
 
 		// ----------------- TODO -----------------
 		// 2a: Erstellen der Indizes für die Vertices
 
-		// Triangle
-		//std::vector<uint32_t> indexBuffer{
-		//	0, 1, 2
-		//};
-
-		// Quad
 		std::vector<uint32_t> indexBuffer{
-			0, 1, 2, 2, 1, 3
+			1, 2, 3
 		};
-
-		// Cube
-		//std::vector<uint32_t> indexBuffer{
-		//	0, 1, 2, 2, 1, 3, // Top
-		//	4, 6, 5, 5, 6, 7, // Bottom
-		//	0, 2, 4, 4, 2, 6, // Back
-		//	1, 5, 3, 3, 5, 7, // Front
-		//	0, 4, 1, 1, 4, 5, // Left
-		//	2, 3, 6, 6, 3, 7  // Right
-		//};
 
 		indices.count = static_cast<uint32_t>(indexBuffer.size());
 		uint32_t indexBufferSize = indices.count * sizeof(uint32_t);
@@ -472,13 +442,9 @@ public:
 		// 4a: Erstellen Sie ein VkDescriptorSetLayoutBinding für die Textur
 
 		// Binding 1: Combined image sampler (Fragment shader)
-		VkDescriptorSetLayoutBinding samplerBinding{};
-		samplerBinding.binding = 1;
-		samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		samplerBinding.descriptorCount = 1;
-		samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		samplerBinding.pImmutableSamplers = nullptr;
-		layoutBindings.push_back(samplerBinding);
+		//VkDescriptorSetLayoutBinding samplerBinding{};
+		// ...
+		//layoutBindings.push_back(samplerBinding);
 
 		VkDescriptorSetLayoutCreateInfo descriptorLayoutCI{};
 		descriptorLayoutCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -541,14 +507,9 @@ public:
 			// 4b: Erstellen Sie ein VkWriteDescriptorSet für die Textur
 
 			// Binding 1 : Combined image sampler
-			VkWriteDescriptorSet samplerDescriptorWrite{};
-			samplerDescriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			samplerDescriptorWrite.dstSet = uniformBuffers[i].descriptorSet;
-			samplerDescriptorWrite.descriptorCount = 1;
-			samplerDescriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			samplerDescriptorWrite.pImageInfo = &texDescriptorInfo;
-			samplerDescriptorWrite.dstBinding = 1;
-			writeDescriptorSets.push_back(samplerDescriptorWrite);
+			//VkWriteDescriptorSet samplerDescriptorWrite{};
+			// ...
+			//writeDescriptorSets.push_back(samplerDescriptorWrite);
 
 			vkUpdateDescriptorSets(device, 
 				static_cast<uint32_t>(writeDescriptorSets.size()), 
@@ -1019,7 +980,6 @@ public:
 		ubo.projectionMatrix = camera.matrices.perspective;
 		ubo.viewMatrix = camera.matrices.view;
 		ubo.modelMatrix = glm::mat4(1.0f);
-		ubo.time = value;
 
 		// Copy the current matrices to the current frame's uniform buffer
 		// Note: Since we requested a host coherent memory type for the uniform buffer, the write is instantly visible to the GPU
