@@ -25,12 +25,12 @@ out gl_PerVertex
 void main() 
 {
 	// ----------------- TODO -----------------
-	// 3a: Erstellen Sie eine einfache Animation mit der Zeitvariable
+	// 2b: Erstellen Sie eine einfache Animation mit der Zeitvariable
 	
 	outColor = inColor;
 	gl_Position = ubo.projectionMatrix * ubo.viewMatrix * ubo.modelMatrix * vec4(inPos.xyz, 1.0);
 
 	// ----------------- TODO -----------------
-	// 4c: UV-Koordinaten an den Fragment-Shader weitergeben
+	// 3c: UV-Koordinaten an den Fragment-Shader weitergeben
 
 }

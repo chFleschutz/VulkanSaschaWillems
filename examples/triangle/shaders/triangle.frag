@@ -1,7 +1,7 @@
 #version 450
 
 // ----------------- TODO -----------------
-// 4d: sampler2D für die Textur hinzufügen und Farbe auslesen
+// 3d: sampler2D für die Textur hinzufügen und Farbe auslesen
 
 layout (location = 0) in vec3 inColor;
 layout (location = 1) in vec2 inUV;

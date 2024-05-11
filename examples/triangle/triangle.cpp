@@ -85,7 +85,7 @@ public:
 	// Note: You should use data types that align with the GPU in order to avoid manual padding (vec4, mat4)
 
 	// ----------------- TODO -----------------
-	// 3a: Füge eine Zeitvariable zum UniformBufferObject hinzu
+	// 2b: Füge eine Zeitvariable zum UniformBufferObject hinzu
 
 	struct UniformBufferObject {
 		glm::mat4 projectionMatrix;
@@ -439,7 +439,7 @@ public:
 		layoutBindings.push_back(uboBinding);
 
 		// ----------------- TODO -----------------
-		// 4a: Erstellen Sie ein VkDescriptorSetLayoutBinding für die Textur
+		// 3a: Erstellen Sie ein VkDescriptorSetLayoutBinding für die Textur
 
 		// Binding 1: Combined image sampler (Fragment shader)
 		//VkDescriptorSetLayoutBinding samplerBinding{};
@@ -504,7 +504,7 @@ public:
 			writeDescriptorSets.push_back(uboDescriptorWrite);
 
 			// ----------------- TODO -----------------
-			// 4b: Erstellen Sie ein VkWriteDescriptorSet für die Textur
+			// 3b: Erstellen Sie ein VkWriteDescriptorSet für die Textur
 
 			// Binding 1 : Combined image sampler
 			//VkWriteDescriptorSet samplerDescriptorWrite{};
@@ -765,7 +765,7 @@ public:
 		inputAssemblyStateCI.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
 		// ----------------- TODO -----------------
-		// 3b: Aktivieren Sie die Wireframe-Darstellung
+		// 2c: Aktivieren Sie die Wireframe-Darstellung
 		 
 		// Rasterization state
 		VkPipelineRasterizationStateCreateInfo rasterizationStateCI{};
@@ -974,7 +974,7 @@ public:
 		float value = (std::sin(2 * M_PI * frequency * duration) + 1) / 2;
 
 		// ----------------- TODO -----------------
-		// 3a: Updaten Sie die Zeitvariable des UniformBufferObject
+		// 2b: Updaten Sie die Zeitvariable des UniformBufferObject
 
 		UniformBufferObject ubo{};
 		ubo.projectionMatrix = camera.matrices.perspective;
