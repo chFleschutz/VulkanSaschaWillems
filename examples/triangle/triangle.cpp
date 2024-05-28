@@ -429,23 +429,22 @@ public:
 	void createDescriptorPool()
 	{
 		// We need to tell the API the number of max. requested descriptors per type
-		VkDescriptorPoolSize descriptorTypeCounts[1];
+		std::array<VkDescriptorPoolSize, 2> descriptorTypeCounts{};
 		// This example only one descriptor type (uniform buffer)
 		descriptorTypeCounts[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		// We have one buffer (and as such descriptor) per frame
 		descriptorTypeCounts[0].descriptorCount = MAX_CONCURRENT_FRAMES;
-		// For additional types you need to add new entries in the type count list
-		// E.g. for two combined image samplers :
-		// typeCounts[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		// typeCounts[1].descriptorCount = 2;
+		// Descriptor for one image sampler
+		descriptorTypeCounts[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorTypeCounts[1].descriptorCount = MAX_CONCURRENT_FRAMES;
 
 		// Create the global descriptor pool
 		// All descriptors used in this example are allocated from this pool
 		VkDescriptorPoolCreateInfo descriptorPoolCI{};
 		descriptorPoolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		descriptorPoolCI.pNext = nullptr;
-		descriptorPoolCI.poolSizeCount = 1;
-		descriptorPoolCI.pPoolSizes = descriptorTypeCounts;
+		descriptorPoolCI.poolSizeCount = static_cast<uint32_t>(descriptorTypeCounts.size());
+		descriptorPoolCI.pPoolSizes = descriptorTypeCounts.data();
 		// Set the max. number of descriptor sets that can be requested from this pool (requesting beyond this limit will result in an error)
 		// Our sample will create one set per uniform buffer per frame
 		descriptorPoolCI.maxSets = MAX_CONCURRENT_FRAMES;
